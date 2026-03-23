@@ -301,7 +301,7 @@ function stopGameLoop() {
 // Removes transient gameplay nodes (drops and visual effects) from the playfield.
 function removeAllDropsAndEffects() {
   // Remove all transient nodes so reset starts cleanly.
-  gameContainer.querySelectorAll(".drop, .splash, .score-pop, .confetti").forEach((node) => {
+  gameContainer.querySelectorAll(".drop, .splash, .score-pop").forEach((node) => {
     node.remove();
   });
 }
@@ -348,22 +348,39 @@ function toContainerPosition(clientX, clientY) {
 
 // Generates a burst of animated confetti pieces for the win celebration.
 function burstConfetti() {
-  // Generate multiple falling pieces with random color and timing.
+  // Use canvas-confetti when available, scoped visually to the game area.
+  if (typeof confetti !== "function") return;
+
+  const rect = gameContainer.getBoundingClientRect();
   const colors = ["#ffc907", "#2e9df7", "#4fcb53", "#ff902a", "#f16061"];
-  const count = 110;
-  const containerWidth = gameContainer.clientWidth;
+  const centerX = (rect.left + rect.width / 2) / window.innerWidth;
+  const topY = Math.max(0, rect.top / window.innerHeight);
 
-  for (let i = 0; i < count; i += 1) {
-    const confetti = document.createElement("span");
-    confetti.className = "confetti";
-    confetti.style.left = `${Math.random() * containerWidth}px`;
-    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDelay = `${Math.random() * 0.6}s`;
-    confetti.style.animationDuration = `${2.4 + Math.random() * 1.2}s`;
+  confetti({
+    particleCount: 140,
+    spread: 95,
+    startVelocity: 42,
+    ticks: 220,
+    scalar: 0.95,
+    zIndex: 20,
+    colors,
+    disableForReducedMotion: true,
+    origin: { x: centerX, y: topY + 0.05 },
+  });
 
-    gameContainer.appendChild(confetti);
-    setTimeout(() => confetti.remove(), 3400);
-  }
+  setTimeout(() => {
+    confetti({
+      particleCount: 90,
+      spread: 120,
+      startVelocity: 36,
+      ticks: 180,
+      scalar: 0.9,
+      zIndex: 20,
+      colors,
+      disableForReducedMotion: true,
+      origin: { x: centerX, y: topY + 0.08 },
+    });
+  }, 220);
 }
 
 // Returns a randomly selected item from a provided array.

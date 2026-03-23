@@ -135,6 +135,15 @@ button:active {
     transform: scale(0.98);
 }
 
+button:disabled {
+    /* Clear visual + interaction state when button is disabled */
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    filter: grayscale(0.25);
+}
+
 #start-btn {
     /* Primary action button */
     background: var(--cw-green);
@@ -329,17 +338,6 @@ button:active {
     display: none;
 }
 
-.confetti {
-    /* Win celebration pieces */
-    position: absolute;
-    top: -16px;
-    width: 9px;
-    height: 13px;
-    opacity: 0.95;
-    z-index: 12;
-    animation: confettiFall 2.8s linear forwards;
-}
-
 @keyframes dropFall {
     /* Vertical movement for drops */
     from {
@@ -371,17 +369,6 @@ button:active {
     to {
         opacity: 0;
         transform: translate(-50%, -50%) translateY(-28px);
-    }
-}
-
-@keyframes confettiFall {
-    /* Confetti falls from top of container */
-    from {
-        transform: translateY(0) rotate(0deg);
-    }
-    to {
-        transform: translateY(120vh) rotate(650deg);
-        opacity: 0;
     }
 }
 
