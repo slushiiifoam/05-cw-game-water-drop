@@ -76,6 +76,7 @@ renderUI();
 setStageUI(getCurrentStage());
 hideStageBanner();
 
+// Starts a new run by enabling gameplay loop, timer countdown, and drop spawning.
 function startGame() {
   // Ignore start if a run is active or if timer already reached 0.
   if (gameRunning) return;
@@ -94,6 +95,7 @@ function startGame() {
   scheduleNextDrop();
 }
 
+// Resets all gameplay state, clears effects, and returns UI to initial values.
 function resetGame() {
   // Stop everything first so no old timers continue running.
   stopGameLoop();
@@ -114,6 +116,7 @@ function resetGame() {
   currentStageName = STAGES[0].name;
 }
 
+// Runs once per second to update time, stage transitions, and end-of-game checks.
 function tickTimer() {
   // Safety guard if interval fires after game has ended.
   if (!gameRunning) return;
@@ -139,6 +142,7 @@ function tickTimer() {
   }
 }
 
+// Returns the current stage object based on remaining time.
 function getCurrentStage() {
   // Stage changes by remaining time ranges.
   if (timeLeft > 20) return STAGES[0];
@@ -146,6 +150,7 @@ function getCurrentStage() {
   return STAGES[2];
 }
 
+// Spawns one drop now, then schedules the next spawn using stage pacing.
 function scheduleNextDrop() {
   // Stop spawning if game is paused/ended.
   if (!gameRunning) return;
@@ -156,12 +161,14 @@ function scheduleNextDrop() {
 
   // Small jitter prevents perfectly predictable rhythm.
   const randomJitter = Math.random() * 160;
+  // Schedule next drop based on current stage's spawn delay + jitter.
   spawnTimeoutId = setTimeout(scheduleNextDrop, stage.spawnDelay + randomJitter);
 }
 
+// Creates one falling drop element, wires click behavior, and handles cleanup.
 function createDrop(stage) {
   // 70% clean, 30% polluted.
-  const isCleanDrop = Math.random() < 0.7;
+  const isCleanDrop = (Math.random() * 10) < 7; 
   const drop = document.createElement("img");
 
   // Pick image asset based on drop type.
@@ -176,13 +183,14 @@ function createDrop(stage) {
 
   drop.style.width = `${size}px`;
   drop.style.height = `${size}px`;
+  // Ensure drop stays within container horizontally.
   drop.style.left = `${Math.random() * Math.max(1, containerWidth - size)}px`;
   drop.style.animationDuration = `${stage.fallDuration}s`;
   drop.style.setProperty("--fall-distance", `${containerHeight + size + 36}px`);
 
   // Prevent double counting if user taps repeatedly before removal.
   let clicked = false;
-
+  // Handle clicks/taps on the drop for scoring and feedback.
   drop.addEventListener("pointerdown", (event) => {
     if (!gameRunning || clicked) return;
     clicked = true;
@@ -216,6 +224,7 @@ function createDrop(stage) {
   gameContainer.appendChild(drop);
 }
 
+// Applies score changes and clamps score so it never goes below zero.
 function applyScore(amount) {
   // Keep score from dropping below zero for cleaner UX.
   score += amount;
@@ -224,6 +233,7 @@ function applyScore(amount) {
   renderUI();
 }
 
+// Re-renders dynamic HUD values like score, timer, stage label, and can fill.
 function renderUI() {
   // Update basic counters.
   scoreEl.textContent = score;
@@ -239,12 +249,14 @@ function renderUI() {
   stageNameEl.textContent = getCurrentStage().name;
 }
 
+// Updates the stage banner text content for the active stage.
 function setStageUI(stage) {
   // Text inside the yellow stage banner.
   stageTextEl.textContent = stage.label;
   stageTipEl.textContent = stage.tip;
 }
 
+// Ends the run, shows win/lose message, and triggers confetti when player wins.
 function endGame() {
   // Stop loops and lock gameplay.
   stopGameLoop();
@@ -269,11 +281,13 @@ function endGame() {
   }
 }
 
+// Hides the end-game overlay panel.
 function hideEndScreen() {
   // Hide overlay when starting or resetting.
   endScreenEl.classList.add("hidden");
 }
 
+// Stops all active timers/timeouts used by gameplay and stage banner timing.
 function stopGameLoop() {
   // Clear every active timer/timeout used by gameplay.
   clearInterval(timerId);
@@ -284,6 +298,7 @@ function stopGameLoop() {
   stageBannerTimeoutId = null;
 }
 
+// Removes transient gameplay nodes (drops and visual effects) from the playfield.
 function removeAllDropsAndEffects() {
   // Remove all transient nodes so reset starts cleanly.
   gameContainer.querySelectorAll(".drop, .splash, .score-pop, .confetti").forEach((node) => {
@@ -291,6 +306,7 @@ function removeAllDropsAndEffects() {
   });
 }
 
+// Creates a short-lived splash effect at the user's interaction point.
 function createSplash(clientX, clientY, isCleanDrop) {
   // Spawn a small pulse exactly where player tapped/clicked.
   const splash = document.createElement("span");
@@ -305,6 +321,7 @@ function createSplash(clientX, clientY, isCleanDrop) {
   setTimeout(() => splash.remove(), 460);
 }
 
+// Creates floating +1/-1 feedback text at the interaction point.
 function createScorePop(clientX, clientY, points) {
   // Floating +1 / -1 text near interaction point.
   const pop = document.createElement("span");
@@ -319,6 +336,7 @@ function createScorePop(clientX, clientY, points) {
   setTimeout(() => pop.remove(), 620);
 }
 
+// Converts viewport pointer coordinates into coordinates local to the game container.
 function toContainerPosition(clientX, clientY) {
   // Convert viewport coordinates to playfield-local coordinates.
   const rect = gameContainer.getBoundingClientRect();
@@ -328,6 +346,7 @@ function toContainerPosition(clientX, clientY) {
   };
 }
 
+// Generates a burst of animated confetti pieces for the win celebration.
 function burstConfetti() {
   // Generate multiple falling pieces with random color and timing.
   const colors = ["#ffc907", "#2e9df7", "#4fcb53", "#ff902a", "#f16061"];
@@ -347,16 +366,19 @@ function burstConfetti() {
   }
 }
 
+// Returns a randomly selected item from a provided array.
 function pickRandom(options) {
   // Return one random item from an array.
   return options[Math.floor(Math.random() * options.length)];
 }
 
+// Returns a random decimal between min (inclusive) and max (exclusive).
 function randomBetween(min, max) {
   // Return random decimal in [min, max).
   return Math.random() * (max - min) + min;
 }
 
+// Shows the stage banner, updates its text, then auto-hides it after 5 seconds.
 function showStageBanner(stage) {
   // Show the stage banner for 5 seconds.
   setStageUI(stage);
@@ -365,6 +387,7 @@ function showStageBanner(stage) {
   stageBannerTimeoutId = setTimeout(hideStageBanner, 5000);
 }
 
+// Hides the stage banner until the next start/stage-change event.
 function hideStageBanner() {
   // Hide stage banner until next stage/start event.
   stageBannerEl.classList.add("banner-hidden");
